@@ -4,7 +4,6 @@
 /buildInstanceRelease/
 /.toolchain/
 /toolchain/stage/
-/artifacts/
 /dist/
 /.vs/
 /.vscode/
