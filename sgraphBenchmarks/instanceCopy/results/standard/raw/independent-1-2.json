@@ -1,0 +1,23 @@
+{
+    "connectedInstances": 0,
+    "count": 1,
+    "creationMs": 0.0191,
+    "dataset": {
+        "entityCount": 4,
+        "path": "data/standard_set.brep",
+        "sha256": "1ff284cbb5495772c430a79461929f07f1e5b883dbec7aea262533e8fdb3952b",
+        "sizeBytes": 5588,
+        "trianglesPerSet": 3392
+    },
+    "estimatedGpuGeometryBytes": 284928,
+    "firstDisplayMs": 377.2548,
+    "graphicStructures": 1,
+    "independentPresentations": 1,
+    "mode": "independent",
+    "occtStatistics": "FPS:        170.4\nCPU FPS:     -1.0\nLayers:         5\nStructs:        3\nRendered\n    Layers:     2 \n   Structs:     3 \n    Groups:     8 \n    Arrays:    11 \n    [fill]:     5 \n    [line]:     3 \n   [point]:     0 \n    [text]:     3 \n Triangles:   3.9k\n     Lines:   975 \n    Points:     0 \nGPU Memory\n  Geometry:  98.1 KiB\n  Textures:     0 B\n    Frames:   7.5 MiB\nTimers Average\n Elapsed Frame:   5.9 ms\n     CPU Frame:   0.0 ms\nTimers Max\n     CPU Frame:  31.2 ms\n",
+    "privateBytes": 189329408,
+    "redraw30Ms": 188.3411,
+    "renderedTriangles": 3392,
+    "sharedPrototypes": 0,
+    "workingSetBytes": 96583680
+}

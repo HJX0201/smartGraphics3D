@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>smartGraphics3D 共享显示实例对比报告</title>
+<style>
+:root { color-scheme: dark; --bg:#11151b; --panel:#1a2029; --line:#34404f;
+  --text:#e7edf5; --muted:#9eabb9; --accent:#55c2ff; --good:#59d99d; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text);
+  font:14px/1.55 "Segoe UI","Microsoft YaHei",sans-serif; }
+main { max-width:1280px; margin:auto; padding:32px 24px 64px; }
+h1 { font-size:30px; margin:0 0 8px; }
+h2 { margin:30px 0 12px; font-size:20px; }
+p,li { color:var(--muted); }
+.tag { display:inline-block; margin:4px 8px 4px 0; padding:4px 10px;
+  border:1px solid var(--line); border-radius:20px; color:var(--accent); }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:18px; overflow:auto; }
+.result { color:var(--good); font-size:18px; font-weight:600; }
+table { border-collapse:collapse; width:100%; min-width:900px; }
+th,td { padding:9px 10px; border-bottom:1px solid var(--line); text-align:right; }
+th { color:var(--muted); font-weight:600; }
+th:nth-child(2),td:nth-child(2) { text-align:left; }
+code { color:#bedfff; word-break:break-all; }
+</style>
+</head>
+<body><main>
+<h1>共享显示实例对比报告</h1>
+<p>smartGraphics3D / OCCT AIS_ConnectedInteractive / 固定网格质量</p>
+<span class="tag">Release</span>
+<span class="tag">Windows 10 (10.0)</span>
+<span class="tag">Qt 5.12.10</span>
+<span class="tag">OCCT 7.7.0</span>
+<span class="tag">2026-07-27 18:40:18</span>
+
+<h2>结论</h2>
+<div class="panel">
+  <p class="result">一个包含 5000 个实体、每份
+  2,342,442 个三角形的大模型，仅复制 1、2、5、10 次。</p>
+  <p>普通复制为每个对象建立独立 AIS_Shape Presentation；共享模式保留一个原型并用
+  Connected 实例复用显示几何。两种模式在每个数量档位的展开三角形完全相同。</p>
+</div>
+
+<h2>中位数结果</h2>
+<div class="panel"><table>
+<thead><tr><th>份数</th><th>模式</th><th>创建 ms</th><th>首显 ms</th>
+<th>30 帧 ms</th><th>Private MiB</th><th>Working MiB</th>
+<th>GPU 估算 MiB</th><th>独立/原型/实例</th><th>展开三角形</th></tr></thead>
+<tbody><tr>
+  <td>1</td><td>普通复制</td>
+  <td>0.03</td>
+  <td>8,743.47</td>
+  <td>956.36</td>
+  <td>473.47</td>
+  <td>336.37</td>
+  <td>187.65</td>
+  <td>1 / 0 / 0</td>
+  <td>2,342,442</td>
+</tr>
+<tr>
+  <td>1</td><td>共享实例</td>
+  <td>0.03</td>
+  <td>9,168.87</td>
+  <td>948.30</td>
+  <td>474.89</td>
+  <td>337.83</td>
+  <td>187.65</td>
+  <td>1 / 0 / 0</td>
+  <td>2,342,442</td>
+</tr>
+<tr>
+  <td>2</td><td>普通复制</td>
+  <td>0.03</td>
+  <td>9,805.91</td>
+  <td>956.64</td>
+  <td>678.95</td>
+  <td>417.51</td>
+  <td>375.30</td>
+  <td>2 / 0 / 0</td>
+  <td>4,684,884</td>
+</tr>
+<tr>
+  <td>2</td><td>共享实例</td>
+  <td>0.03</td>
+  <td>8,204.07</td>
+  <td>965.01</td>
+  <td>376.85</td>
+  <td>296.38</td>
+  <td>187.65</td>
+  <td>0 / 1 / 2</td>
+  <td>4,684,884</td>
+</tr>
+<tr>
+  <td>5</td><td>普通复制</td>
+  <td>0.04</td>
+  <td>12,618.35</td>
+  <td>937.12</td>
+  <td>1,275.73</td>
+  <td>638.95</td>
+  <td>938.25</td>
+  <td>5 / 0 / 0</td>
+  <td>11,712,210</td>
+</tr>
+<tr>
+  <td>5</td><td>共享实例</td>
+  <td>0.04</td>
+  <td>8,141.26</td>
+  <td>945.96</td>
+  <td>423.09</td>
+  <td>340.85</td>
+  <td>187.65</td>
+  <td>0 / 1 / 5</td>
+  <td>11,712,210</td>
+</tr>
+<tr>
+  <td>10</td><td>普通复制</td>
+  <td>0.04</td>
+  <td>18,099.88</td>
+  <td>950.41</td>
+  <td>1,950.91</td>
+  <td>998.65</td>
+  <td>1,876.50</td>
+  <td>10 / 0 / 0</td>
+  <td>23,424,420</td>
+</tr>
+<tr>
+  <td>10</td><td>共享实例</td>
+  <td>0.04</td>
+  <td>8,563.87</td>
+  <td>950.69</td>
+  <td>499.99</td>
+  <td>416.64</td>
+  <td>187.65</td>
+  <td>0 / 1 / 10</td>
+  <td>23,424,420</td>
+</tr></tbody>
+</table></div>
+
+<h2>共享模式相对减少</h2>
+<div class="panel"><table>
+<thead><tr><th>份数</th><th>Private Bytes</th><th>Working Set</th>
+<th>GPU 几何估算</th><th>首次显示</th><th>30 帧重绘</th></tr></thead>
+<tbody><tr>
+  <td>1</td>
+  <td>-0.30%</td>
+  <td>-0.43%</td>
+  <td>0.00%</td>
+  <td>-4.87%</td>
+  <td>0.84%</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td>44.49%</td>
+  <td>29.01%</td>
+  <td>50.00%</td>
+  <td>16.34%</td>
+  <td>-0.87%</td>
+</tr>
+<tr>
+  <td>5</td>
+  <td>66.84%</td>
+  <td>46.65%</td>
+  <td>80.00%</td>
+  <td>35.48%</td>
+  <td>-0.94%</td>
+</tr>
+<tr>
+  <td>10</td>
+  <td>74.37%</td>
+  <td>58.28%</td>
+  <td>90.00%</td>
+  <td>52.69%</td>
+  <td>-0.03%</td>
+</tr></tbody>
+</table></div>
+
+<h2>24 次原始运行</h2>
+<div class="panel"><table>
+<thead><tr><th>份数</th><th>模式</th><th>首显 ms</th><th>30 帧 ms</th>
+<th>Private MiB</th><th>Working MiB</th><th>GPU 估算 MiB</th></tr></thead>
+<tbody><tr>
+  <td>1</td><td>普通复制</td>
+  <td>8,816.31</td>
+  <td>956.36</td>
+  <td>471.32</td>
+  <td>336.37</td>
+  <td>184.64</td>
+</tr>
+<tr>
+  <td>1</td><td>普通复制</td>
+  <td>8,743.47</td>
+  <td>948.18</td>
+  <td>473.47</td>
+  <td>335.74</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>1</td><td>普通复制</td>
+  <td>8,615.77</td>
+  <td>956.58</td>
+  <td>476.23</td>
+  <td>338.96</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>1</td><td>共享实例</td>
+  <td>9,219.92</td>
+  <td>950.90</td>
+  <td>474.79</td>
+  <td>337.62</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>1</td><td>共享实例</td>
+  <td>9,030.54</td>
+  <td>948.30</td>
+  <td>475.73</td>
+  <td>338.48</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>1</td><td>共享实例</td>
+  <td>9,168.87</td>
+  <td>942.13</td>
+  <td>474.89</td>
+  <td>337.83</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>2</td><td>普通复制</td>
+  <td>10,149.01</td>
+  <td>959.48</td>
+  <td>675.57</td>
+  <td>415.34</td>
+  <td>375.30</td>
+</tr>
+<tr>
+  <td>2</td><td>普通复制</td>
+  <td>9,805.91</td>
+  <td>956.64</td>
+  <td>680.09</td>
+  <td>420.00</td>
+  <td>375.30</td>
+</tr>
+<tr>
+  <td>2</td><td>普通复制</td>
+  <td>9,444.45</td>
+  <td>948.18</td>
+  <td>678.95</td>
+  <td>417.51</td>
+  <td>375.30</td>
+</tr>
+<tr>
+  <td>2</td><td>共享实例</td>
+  <td>8,298.91</td>
+  <td>952.08</td>
+  <td>376.85</td>
+  <td>296.38</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>2</td><td>共享实例</td>
+  <td>8,204.07</td>
+  <td>965.01</td>
+  <td>375.83</td>
+  <td>295.58</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>2</td><td>共享实例</td>
+  <td>8,127.36</td>
+  <td>965.20</td>
+  <td>377.19</td>
+  <td>297.23</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>5</td><td>普通复制</td>
+  <td>12,609.60</td>
+  <td>937.62</td>
+  <td>1,275.73</td>
+  <td>638.75</td>
+  <td>938.25</td>
+</tr>
+<tr>
+  <td>5</td><td>普通复制</td>
+  <td>12,618.35</td>
+  <td>937.12</td>
+  <td>1,275.71</td>
+  <td>638.95</td>
+  <td>938.25</td>
+</tr>
+<tr>
+  <td>5</td><td>普通复制</td>
+  <td>13,118.71</td>
+  <td>933.11</td>
+  <td>1,277.91</td>
+  <td>640.86</td>
+  <td>938.25</td>
+</tr>
+<tr>
+  <td>5</td><td>共享实例</td>
+  <td>8,411.18</td>
+  <td>935.72</td>
+  <td>424.18</td>
+  <td>342.99</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>5</td><td>共享实例</td>
+  <td>8,141.26</td>
+  <td>950.49</td>
+  <td>423.09</td>
+  <td>340.63</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>5</td><td>共享实例</td>
+  <td>8,130.48</td>
+  <td>945.96</td>
+  <td>422.73</td>
+  <td>340.85</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>10</td><td>普通复制</td>
+  <td>18,356.10</td>
+  <td>941.86</td>
+  <td>1,950.91</td>
+  <td>999.33</td>
+  <td>1,876.50</td>
+</tr>
+<tr>
+  <td>10</td><td>普通复制</td>
+  <td>18,005.91</td>
+  <td>950.41</td>
+  <td>1,952.08</td>
+  <td>998.65</td>
+  <td>1,876.50</td>
+</tr>
+<tr>
+  <td>10</td><td>普通复制</td>
+  <td>18,099.88</td>
+  <td>956.55</td>
+  <td>1,948.41</td>
+  <td>994.53</td>
+  <td>1,876.50</td>
+</tr>
+<tr>
+  <td>10</td><td>共享实例</td>
+  <td>8,746.10</td>
+  <td>945.51</td>
+  <td>501.98</td>
+  <td>416.78</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>10</td><td>共享实例</td>
+  <td>8,563.87</td>
+  <td>961.36</td>
+  <td>499.99</td>
+  <td>416.64</td>
+  <td>187.65</td>
+</tr>
+<tr>
+  <td>10</td><td>共享实例</td>
+  <td>8,123.38</td>
+  <td>950.69</td>
+  <td>498.00</td>
+  <td>413.29</td>
+  <td>187.65</td>
+</tr></tbody>
+</table></div>
+
+<h2>测试集与口径</h2>
+<div class="panel"><ul>
+<li>确定性 BREP：<code>data/heavy_5000_entities.brep</code></li>
+<li>大小：8,288,682 B；SHA-256：
+<code>c15e8cfa063a681bd2c76c62485d64018d4de78ab833e4d394353e8e0e8160d7</code></li>
+<li>模型内实体数：5000；每份三角形：
+2,342,442。</li>
+<li>每个模式运行 3 次，每次均为全新进程和真实 Windows/OpenGL 视口，表中取中位数。</li>
+<li>基准关闭交互式渐进降质，确保普通与共享模式使用相同固定网格；应用默认行为不变。</li>
+<li>Private Bytes/Working Set 来自 Windows 进程计数器；GPU 估算按实际展开三角形和共享
+结构计算；OCCT 原始统计保留在 JSON。</li>
+</ul></div>
+</main></body></html>

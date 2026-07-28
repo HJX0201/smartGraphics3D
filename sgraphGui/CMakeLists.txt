@@ -1,0 +1,51 @@
+add_library(sgraphGui STATIC
+    s_import_options.h
+    s_import_options.cpp
+    s_clip_plane_dialog.h
+    s_clip_plane_dialog.cpp
+    s_dialog_size_policy.h
+    s_dialog_size_policy.cpp
+    s_icon_factory.h
+    s_icon_factory.cpp
+    s_icons.qrc
+    s_interface_scale.h
+    s_interface_scale.cpp
+    s_parameter_dialog.h
+    s_parameter_dialog.cpp
+    s_ribbon_widget.h
+    s_ribbon_widget.cpp
+    s_main_window.h
+    s_main_window.cpp
+    s_main_window_ribbon.cpp
+    s_main_window_support.cpp
+    s_main_window_connections.cpp
+    s_main_window_operations.cpp
+    s_main_window_export.cpp
+    s_main_window_arrays.cpp
+    s_main_window_file_tasks.cpp
+    s_main_window_object_actions.cpp
+    s_main_window_command.cpp
+    s_main_window_appearance.cpp
+    s_main_window_view.cpp
+    s_main_window_model.cpp
+    s_main_window_measure.cpp
+    s_main_window_primitives.cpp
+    s_main_window_tasks.cpp
+    s_main_window_transform.cpp
+)
+
+target_include_directories(sgraphGui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(sgraphGui
+    PUBLIC
+        sgraphCore
+        sgraphKernel
+        sgraphDocument
+        sgraphCommands
+        sgraphIo
+        sgraphRender
+        Qt5::Core
+        Qt5::Gui
+        Qt5::Widgets
+        Qt5::Concurrent
+        Qt5::Svg
+)

@@ -1,0 +1,24 @@
+{
+    "connectedInstances": 0,
+    "count": 5,
+    "creationMs": 0.0408,
+    "dataset": {
+        "entityCount": 5000,
+        "path": "data/heavy_5000_entities.brep",
+        "profile": "heavy-5000-entity",
+        "sha256": "c15e8cfa063a681bd2c76c62485d64018d4de78ab833e4d394353e8e0e8160d7",
+        "sizeBytes": 8288682,
+        "trianglesPerSet": 2342442
+    },
+    "estimatedGpuGeometryBytes": 983825640,
+    "firstDisplayMs": 12609.6005,
+    "graphicStructures": 5,
+    "independentPresentations": 5,
+    "mode": "independent",
+    "occtStatistics": "FPS:         32.2\nCPU FPS:     -1.0\nLayers:         5\nStructs:        7\nRendered\n    Layers:     2 \n   Structs:     7 \n    Groups:    16 \n    Arrays:    19 \n    [fill]:     9 \n    [line]:     7 \n   [point]:     0 \n    [text]:     3 \n Triangles:  11.7M\n     Lines: 869.5k\n    Points:     0 \nGPU Memory\n  Geometry: 307.3 MiB\n  Textures:     0 B\n    Frames:   7.5 MiB\nTimers Average\n Elapsed Frame:  31.0 ms\n     CPU Frame:   0.0 ms\nTimers Max\n     CPU Frame:   8 s\n",
+    "privateBytes": 1337700352,
+    "redraw30Ms": 937.6248,
+    "renderedTriangles": 11712210,
+    "sharedPrototypes": 0,
+    "workingSetBytes": 669782016
+}
