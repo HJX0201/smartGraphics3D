@@ -28,3 +28,4 @@
 *.exe
 *.7z
 *.zip
+!artifacts/*.zip
