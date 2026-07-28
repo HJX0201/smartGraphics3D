@@ -2,6 +2,7 @@
 
 #include "s_kernel_shape.h"
 #include "s_result.h"
+#include "s_types.h"
 
 #include <QString>
 #include <QStringList>
@@ -22,6 +23,7 @@ struct SImportedShape
 {
     SKernelShape shape;
     QString suggested_name;
+    SImportedAppearance appearance;
     SFileCompatibilityReport report;
 };
 

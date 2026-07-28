@@ -100,11 +100,13 @@ void SMainWindow::runTransform()
     }
     const SObjectId id = object->id;
     const QString result_name = object->name + tr(" 变换");
-    runShapeTask(tr("精确变换"), {id}, result_name, summary,
-                 [shape = materialized.value(), parameters](const STaskContext&)
-                 {
-                     const auto kernel = createKernelService();
-                     return kernel->transform(shape, parameters);
-                 });
+    runShapeTask(
+        tr("精确变换"), {id}, result_name, summary,
+        [shape = materialized.value(), parameters](const STaskContext&)
+        {
+            const auto kernel = createKernelService();
+            return kernel->transform(shape, parameters);
+        },
+        true);
 }
 } // namespace smartGraphics3D

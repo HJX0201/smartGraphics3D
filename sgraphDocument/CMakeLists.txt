@@ -7,6 +7,7 @@ add_library(sgraphDocument STATIC
     s_3d_document_coordinates.cpp
     s_3d_document_batch.cpp
     s_3d_document_copy.cpp
+    s_3d_document_appearance.cpp
     s_3d_document_state.cpp
 )
 

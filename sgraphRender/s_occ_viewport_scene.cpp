@@ -4,6 +4,7 @@
 #include "s_occ_viewport_p.h"
 #include "s_render_quality.h"
 
+#include <AIS_ColoredShape.hxx>
 #include <AIS_ConnectedInteractive.hxx>
 #include <AIS_Shape.hxx>
 #include <AIS_TextLabel.hxx>
@@ -15,8 +16,10 @@
 #include <Standard_Failure.hxx>
 #include <TCollection_ExtendedString.hxx>
 #include <TopAbs_ShapeEnum.hxx>
+#include <TopExp.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopLoc_Location.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
 #include <TopoDS.hxx>
 #include <gp_Pnt.hxx>
 #include <gp_Trsf.hxx>
@@ -69,23 +72,81 @@ double effectiveTransparency(const SSceneObject& object, SDisplayMode mode)
     return mode == SDisplayMode::Transparent ? 0.65 : object.display.transparency;
 }
 
+double effectiveTransparency(double transparency, SDisplayMode mode)
+{
+    return mode == SDisplayMode::Transparent ? 0.65 : transparency;
+}
+
+quint64 mixAppearanceHash(quint64 hash, quint64 value)
+{
+    return hash ^ (value + 0x9e3779b97f4a7c15ULL + (hash << 6U) + (hash >> 2U));
+}
+
+quint64 styleHash(const SAppearanceStyle& style)
+{
+    const quint64 hash = static_cast<quint64>(style.color.rgb());
+    return mixAppearanceHash(hash,
+                             static_cast<quint64>(qRound64(style.transparency * 1000000000.0)));
+}
+
+quint64 importedAppearanceHash(const SSceneObject& object)
+{
+    if (!object.use_imported_appearance || !object.imported_appearance.valid)
+    {
+        return 0;
+    }
+    quint64 hash = styleHash(object.imported_appearance.base_style);
+    for (const SFaceAppearance& face : object.imported_appearance.face_overrides)
+    {
+        hash = mixAppearanceHash(hash, static_cast<quint64>(face.face_index));
+        hash = mixAppearanceHash(hash, styleHash(face.style));
+    }
+    return hash;
+}
+
 QString presentationKey(const SSceneObject& object, SDisplayMode mode)
 {
     const TopoDS_Shape& shape = SKernelShapeAccess::native(object.shape);
     const quintptr geometry_identity = reinterpret_cast<quintptr>(shape.TShape().get());
-    return QStringLiteral("%1|%2|%3|%4|%5")
+    return QStringLiteral("%1|%2|%3|%4|%5|%6|%7")
         .arg(object.presentation_group_id.toString(QUuid::WithoutBraces))
         .arg(object.display.color.rgba())
         .arg(effectiveTransparency(object, mode), 0, 'g', 17)
         .arg(static_cast<int>(mode))
-        .arg(static_cast<qulonglong>(geometry_identity), 0, 16);
+        .arg(static_cast<qulonglong>(geometry_identity), 0, 16)
+        .arg(object.use_imported_appearance ? 1 : 0)
+        .arg(static_cast<qulonglong>(importedAppearanceHash(object)), 0, 16);
 }
 
 void configurePresentation(const Handle(AIS_Shape) & presentation, const SSceneObject& object,
                            SDisplayMode mode)
 {
-    presentation->SetColor(toOccColor(object.display.color));
-    presentation->SetTransparency(effectiveTransparency(object, mode));
+    const bool use_imported = object.use_imported_appearance && object.imported_appearance.valid;
+    const SAppearanceStyle base_style =
+        use_imported ? object.imported_appearance.base_style
+                     : SAppearanceStyle{object.display.color, object.display.transparency};
+    presentation->SetColor(toOccColor(base_style.color));
+    presentation->SetTransparency(effectiveTransparency(base_style.transparency, mode));
+    if (use_imported)
+    {
+        const Handle(AIS_ColoredShape) colored = Handle(AIS_ColoredShape)::DownCast(presentation);
+        TopTools_IndexedMapOfShape faces;
+        TopExp::MapShapes(presentation->Shape(), TopAbs_FACE, faces);
+        if (!colored.IsNull())
+        {
+            for (const SFaceAppearance& face : object.imported_appearance.face_overrides)
+            {
+                if (face.face_index <= 0 || face.face_index > faces.Extent())
+                {
+                    continue;
+                }
+                const TopoDS_Shape& sub_shape = faces.FindKey(face.face_index);
+                colored->SetCustomColor(sub_shape, toOccColor(face.style.color));
+                colored->SetCustomTransparency(
+                    sub_shape, effectiveTransparency(face.style.transparency, mode));
+            }
+        }
+    }
     const bool wireframe = mode == SDisplayMode::Wireframe || mode == SDisplayMode::HiddenLine;
     presentation->SetDisplayMode(wireframe ? AIS_WireFrame : AIS_Shaded);
     presentation->Attributes()->SetFaceBoundaryDraw(mode == SDisplayMode::ShadedWithEdges);
@@ -178,7 +239,10 @@ void SOccViewport::synchronizeScene()
     {
         const QList<const SSceneObject*>& objects = iterator.value();
         const SSceneObject& first = *objects.front();
-        Handle(AIS_Shape) prototype = new AIS_Shape(SKernelShapeAccess::native(first.shape));
+        Handle(AIS_Shape) prototype =
+            first.use_imported_appearance && first.imported_appearance.valid
+                ? Handle(AIS_Shape)(new AIS_ColoredShape(SKernelShapeAccess::native(first.shape)))
+                : Handle(AIS_Shape)(new AIS_Shape(SKernelShapeAccess::native(first.shape)));
         configurePresentation(prototype, first, m_impl->display_mode);
         const int triangles = triangleCount(prototype->Shape());
         const bool progressive = m_impl->progressive_rendering_enabled &&
@@ -249,12 +313,20 @@ SRenderResourceStatistics SOccViewport::renderResourceStatistics() const
         else
         {
             ++statistics.independent_presentations;
+            if (!Handle(AIS_ColoredShape)::DownCast(displayed.source_shape).IsNull())
+            {
+                ++statistics.colored_prototypes;
+            }
             statistics.estimated_gpu_geometry_bytes +=
                 static_cast<qint64>(triangles) * kEstimatedGpuBytesPerTriangle;
         }
     }
     for (const SSharedPresentation& shared : m_impl->shared_presentations)
     {
+        if (!Handle(AIS_ColoredShape)::DownCast(shared.prototype).IsNull())
+        {
+            ++statistics.colored_prototypes;
+        }
         statistics.estimated_gpu_geometry_bytes +=
             static_cast<qint64>(triangleCount(shared.prototype->Shape())) *
             kEstimatedGpuBytesPerTriangle;

@@ -111,6 +111,61 @@ QVector3D vectorFromJson(const QJsonValue& value)
                : QVector3D();
 }
 
+QJsonObject appearanceStyleToJson(const SAppearanceStyle& style)
+{
+    QJsonObject json;
+    json.insert(QStringLiteral("color"), style.color.name(QColor::HexRgb));
+    json.insert(QStringLiteral("transparency"), style.transparency);
+    return json;
+}
+
+SAppearanceStyle appearanceStyleFromJson(const QJsonValue& value)
+{
+    const QJsonObject json = value.toObject();
+    SAppearanceStyle style;
+    style.color = QColor(json.value(QStringLiteral("color")).toString());
+    style.transparency = json.value(QStringLiteral("transparency")).toDouble();
+    return style;
+}
+
+QJsonObject importedAppearanceToJson(const SImportedAppearance& appearance)
+{
+    QJsonObject json;
+    json.insert(QStringLiteral("base"), appearanceStyleToJson(appearance.base_style));
+    json.insert(QStringLiteral("fallback"), appearanceStyleToJson(appearance.fallback_style));
+    QJsonArray faces;
+    for (const SFaceAppearance& face : appearance.face_overrides)
+    {
+        QJsonObject face_json = appearanceStyleToJson(face.style);
+        face_json.insert(QStringLiteral("faceIndex"), face.face_index);
+        faces.push_back(face_json);
+    }
+    json.insert(QStringLiteral("faces"), faces);
+    return json;
+}
+
+SImportedAppearance importedAppearanceFromJson(const QJsonValue& value)
+{
+    SImportedAppearance appearance;
+    if (!value.isObject())
+    {
+        return appearance;
+    }
+    const QJsonObject json = value.toObject();
+    appearance.valid = true;
+    appearance.base_style = appearanceStyleFromJson(json.value(QStringLiteral("base")));
+    appearance.fallback_style = appearanceStyleFromJson(json.value(QStringLiteral("fallback")));
+    for (const QJsonValue face_value : json.value(QStringLiteral("faces")).toArray())
+    {
+        const QJsonObject face_json = face_value.toObject();
+        SFaceAppearance face;
+        face.face_index = face_json.value(QStringLiteral("faceIndex")).toInt();
+        face.style = appearanceStyleFromJson(face_json);
+        appearance.face_overrides.push_back(std::move(face));
+    }
+    return appearance;
+}
+
 QJsonObject objectToJson(const SSceneObject& object, quint64 shape_size)
 {
     QJsonObject json;
@@ -135,6 +190,12 @@ QJsonObject objectToJson(const SSceneObject& object, quint64 shape_size)
     json.insert(QStringLiteral("color"), object.display.color.name(QColor::HexArgb));
     json.insert(QStringLiteral("transparency"), object.display.transparency);
     json.insert(QStringLiteral("displayMode"), static_cast<int>(object.display.mode));
+    if (object.imported_appearance.valid)
+    {
+        json.insert(QStringLiteral("importedAppearance"),
+                    importedAppearanceToJson(object.imported_appearance));
+        json.insert(QStringLiteral("useImportedAppearance"), object.use_imported_appearance);
+    }
     json.insert(QStringLiteral("custom"), object.custom_properties);
     json.insert(QStringLiteral("transform"), matrixToJson(object.transform));
     json.insert(QStringLiteral("presentationGroupId"),
@@ -177,6 +238,10 @@ SSceneObject objectFromJson(const QJsonObject& json)
     object.display.transparency = json.value(QStringLiteral("transparency")).toDouble();
     object.display.mode =
         static_cast<SDisplayMode>(json.value(QStringLiteral("displayMode")).toInt());
+    object.imported_appearance =
+        importedAppearanceFromJson(json.value(QStringLiteral("importedAppearance")));
+    object.use_imported_appearance =
+        json.value(QStringLiteral("useImportedAppearance")).toBool(false);
     object.custom_properties = json.value(QStringLiteral("custom")).toObject();
     object.transform = matrixFromJson(json.value(QStringLiteral("transform")));
     const QUuid presentation_group_id(json.value(QStringLiteral("presentationGroupId")).toString());

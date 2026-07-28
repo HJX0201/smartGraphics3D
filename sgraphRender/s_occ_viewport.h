@@ -33,6 +33,7 @@ struct SRenderResourceStatistics
 {
     int independent_presentations = 0;
     int shared_prototypes = 0;
+    int colored_prototypes = 0;
     int connected_instances = 0;
     int graphic_structures = 0;
     qint64 rendered_triangles = 0;

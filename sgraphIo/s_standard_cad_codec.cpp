@@ -1,18 +1,16 @@
 #include "s_standard_cad_codec.h"
 
 #include "s_kernel_shape_access.h"
+#include "s_xde_import.h"
 
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepTools.hxx>
 #include <BRep_Builder.hxx>
 #include <IFSelect_ReturnStatus.hxx>
-#include <IGESControl_Reader.hxx>
 #include <IGESControl_Writer.hxx>
 #include <Message_ProgressRange.hxx>
 #include <QFileInfo>
 #include <RWObj_CafWriter.hxx>
-#include <RWObj_TriangulationReader.hxx>
-#include <STEPControl_Reader.hxx>
 #include <STEPControl_StepModelType.hxx>
 #include <STEPControl_Writer.hxx>
 #include <Standard_Failure.hxx>
@@ -44,9 +42,13 @@ SFileCompatibilityReport reportFor(const QString& extension, bool writing)
     if (extension == QStringLiteral("step") || extension == QStringLiteral("stp") ||
         extension == QStringLiteral("iges") || extension == QStringLiteral("igs"))
     {
-        report.preserved_properties = QStringList{QStringLiteral("几何"), QStringLiteral("拓扑")};
-        report.lost_properties = QStringList{QStringLiteral("smartGraphics3D 操作历史"),
-                                             QStringLiteral("测量与场景状态")};
+        report.preserved_properties =
+            writing ? QStringList{QStringLiteral("几何"), QStringLiteral("拓扑")}
+                    : QStringList{QStringLiteral("几何"), QStringLiteral("拓扑"),
+                                  QStringLiteral("纯色与透明度")};
+        report.lost_properties =
+            QStringList{QStringLiteral("smartGraphics3D 操作历史"),
+                        QStringLiteral("测量与场景状态"), QStringLiteral("装配树层级")};
     }
     else if (extension == QStringLiteral("brep"))
     {
@@ -56,9 +58,16 @@ SFileCompatibilityReport reportFor(const QString& extension, bool writing)
     }
     else
     {
-        report.preserved_properties = QStringList{QStringLiteral("三角网格")};
+        report.preserved_properties =
+            !writing && extension == QStringLiteral("obj")
+                ? QStringList{QStringLiteral("三角网格"), QStringLiteral("MTL 纯色与透明度")}
+                : QStringList{QStringLiteral("三角网格")};
         report.lost_properties = QStringList{QStringLiteral("精确曲面"), QStringLiteral("拓扑"),
                                              QStringLiteral("操作历史")};
+        if (!writing && extension == QStringLiteral("obj"))
+        {
+            report.lost_properties.push_back(QStringLiteral("纹理贴图与 UV 材质效果"));
+        }
         if (writing)
         {
             report.warnings = QStringList{QStringLiteral("导出将离散化精确 CAD 曲面。")};
@@ -116,23 +125,11 @@ SResult<SImportedShape> SStandardCadCodec::read(const QString& file_path) const
     {
         if (extension == QStringLiteral("step") || extension == QStringLiteral("stp"))
         {
-            STEPControl_Reader reader;
-            if (reader.ReadFile(path.c_str()) != IFSelect_RetDone || reader.TransferRoots() <= 0)
-            {
-                return SResult<SImportedShape>::failure(SErrorCode::FileFailure,
-                                                        QObject::tr("STEP 文件读取失败"));
-            }
-            return importedResult(reader.OneShape(), file_path, extension);
+            return importXdeFile(file_path, extension, reportFor(extension, false));
         }
         if (extension == QStringLiteral("iges") || extension == QStringLiteral("igs"))
         {
-            IGESControl_Reader reader;
-            if (reader.ReadFile(path.c_str()) != IFSelect_RetDone || reader.TransferRoots() <= 0)
-            {
-                return SResult<SImportedShape>::failure(SErrorCode::FileFailure,
-                                                        QObject::tr("IGES 文件读取失败"));
-            }
-            return importedResult(reader.OneShape(), file_path, extension);
+            return importXdeFile(file_path, extension, reportFor(extension, false));
         }
         if (extension == QStringLiteral("brep"))
         {
@@ -158,13 +155,7 @@ SResult<SImportedShape> SStandardCadCodec::read(const QString& file_path) const
         }
         if (extension == QStringLiteral("obj"))
         {
-            RWObj_TriangulationReader reader;
-            if (!reader.Read(TCollection_AsciiString(path.c_str()), Message_ProgressRange()))
-            {
-                return SResult<SImportedShape>::failure(SErrorCode::FileFailure,
-                                                        QObject::tr("OBJ 文件读取失败"));
-            }
-            return importedResult(reader.ResultShape(), file_path, extension);
+            return importXdeFile(file_path, extension, reportFor(extension, false));
         }
     }
     catch (const Standard_Failure& failure)

@@ -68,6 +68,8 @@ class S3dDocument final : public QObject
     SResult<void> isolateObjects(const QList<SObjectId>& ids);
     SResult<void> showAllObjects();
     SResult<void> setDisplayStyle(const SObjectId& id, const SDisplayStyle& style);
+    SResult<void> setObjectColors(const QList<SObjectId>& ids, const QColor& color);
+    SResult<void> restoreImportedAppearances(const QList<SObjectId>& ids);
 
     bool canUndo() const;
     bool canRedo() const;

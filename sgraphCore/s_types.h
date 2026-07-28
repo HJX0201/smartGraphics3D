@@ -7,6 +7,7 @@
 #include <QString>
 #include <QUuid>
 #include <QVector3D>
+#include <QVector>
 
 namespace smartGraphics3D
 {
@@ -57,6 +58,26 @@ struct SDisplayStyle
     QColor color = QColor(205, 228, 238);
     double transparency = 0.0;
     SDisplayMode mode = SDisplayMode::ShadedWithEdges;
+};
+
+struct SAppearanceStyle
+{
+    QColor color = QColor(205, 228, 238);
+    double transparency = 0.0;
+};
+
+struct SFaceAppearance
+{
+    int face_index = 0;
+    SAppearanceStyle style;
+};
+
+struct SImportedAppearance
+{
+    bool valid = false;
+    SAppearanceStyle base_style;
+    SAppearanceStyle fallback_style;
+    QVector<SFaceAppearance> face_overrides;
 };
 
 struct SCoordinateSystem

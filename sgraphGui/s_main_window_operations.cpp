@@ -281,6 +281,14 @@ void SMainWindow::importCad()
                               : SObjectType::CadShape;
             object.stage = SDataStage::Original;
             object.source = tr("文件导入");
+            object.imported_appearance = result->value().appearance;
+            object.use_imported_appearance = object.imported_appearance.valid;
+            if (object.imported_appearance.valid)
+            {
+                object.display.color = object.imported_appearance.fallback_style.color;
+                object.display.transparency =
+                    object.imported_appearance.fallback_style.transparency;
+            }
             object.external_path = QFileInfo(file_path).absoluteFilePath();
             object.external_reference = true;
             object.locked = true;
@@ -608,12 +616,14 @@ void SMainWindow::runMirror()
     const SKernelShape shape = materialized.value();
     const SObjectId id = object->id;
     const QString result_name = object->name + tr(" 镜像");
-    runShapeTask(tr("镜像"), {id}, result_name, tr("镜像平面=%1").arg(axis),
-                 [shape, normal](const STaskContext&)
-                 {
-                     const auto kernel = createKernelService();
-                     return kernel->mirror(shape, normal);
-                 });
+    runShapeTask(
+        tr("镜像"), {id}, result_name, tr("镜像平面=%1").arg(axis),
+        [shape, normal](const STaskContext&)
+        {
+            const auto kernel = createKernelService();
+            return kernel->mirror(shape, normal);
+        },
+        true);
 }
 
 } // namespace smartGraphics3D

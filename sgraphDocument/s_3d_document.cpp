@@ -503,6 +503,8 @@ SResult<void> S3dDocument::setDisplayStyle(const SObjectId& id, const SDisplaySt
                           return SResult<void>::failure(SErrorCode::NotFound, tr("对象不存在"));
                       }
                       object->display = style;
+                      object->use_imported_appearance = false;
+                      object->modified_at = QDateTime::currentDateTimeUtc();
                       return SResult<void>::success();
                   },
                   {id});

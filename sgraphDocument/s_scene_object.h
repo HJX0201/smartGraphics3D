@@ -26,6 +26,8 @@ struct SSceneObject
     QMatrix4x4 transform;
     QUuid presentation_group_id = QUuid::createUuid();
     SDisplayStyle display;
+    SImportedAppearance imported_appearance;
+    bool use_imported_appearance = false;
     bool visible = true;
     bool locked = false;
     bool frozen = false;

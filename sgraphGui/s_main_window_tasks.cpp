@@ -143,7 +143,8 @@ void SMainWindow::connectTaskSignals()
 
 void SMainWindow::runShapeTask(QString task_name, QList<SObjectId> inputs, QString result_name,
                                QString parameter_summary,
-                               std::function<SResult<SKernelShape>(const STaskContext&)> work)
+                               std::function<SResult<SKernelShape>(const STaskContext&)> work,
+                               bool preserve_appearance)
 {
     auto result = std::make_shared<SResult<SKernelShape>>();
     m_task_manager.run(
@@ -164,8 +165,8 @@ void SMainWindow::runShapeTask(QString task_name, QList<SObjectId> inputs, QStri
             context.reportProgress(90, QObject::tr("等待提交"));
             return SResult<void>::success();
         },
-        [this, result, task_name, result_name, parameter_summary,
-         inputs](const SResult<void>& completion)
+        [this, result, task_name, result_name, parameter_summary, inputs,
+         preserve_appearance](const SResult<void>& completion)
         {
             if (!completion)
             {
@@ -185,6 +186,42 @@ void SMainWindow::runShapeTask(QString task_name, QList<SObjectId> inputs, QStri
             object.name = result_name;
             object.shape = result->value();
             object.source = task_name;
+            const SSceneObject* source =
+                inputs.isEmpty() ? nullptr : m_document.findObject(inputs.front());
+            if (source)
+            {
+                object.display = source->display;
+                if (preserve_appearance && source->imported_appearance.valid)
+                {
+                    const auto source_metrics = m_kernel->measure(source->shape);
+                    const auto result_metrics = m_kernel->measure(object.shape);
+                    if (source_metrics && result_metrics &&
+                        source_metrics.value().face_count == result_metrics.value().face_count)
+                    {
+                        object.imported_appearance = source->imported_appearance;
+                        object.use_imported_appearance = source->use_imported_appearance;
+                    }
+                    else
+                    {
+                        object.display.color = source->imported_appearance.fallback_style.color;
+                        object.display.transparency =
+                            source->imported_appearance.fallback_style.transparency;
+                        appendLog(QStringLiteral("WARNING"),
+                                  tr("%1 未能安全映射面颜色，已退回主颜色").arg(task_name));
+                    }
+                }
+                else if (!preserve_appearance && source->imported_appearance.valid)
+                {
+                    if (source->use_imported_appearance)
+                    {
+                        object.display.color = source->imported_appearance.fallback_style.color;
+                        object.display.transparency =
+                            source->imported_appearance.fallback_style.transparency;
+                    }
+                    appendLog(QStringLiteral("INFO"),
+                              tr("%1 改变了拓扑，面颜色已退回主颜色").arg(task_name));
+                }
+            }
             const auto committed = m_document.addDerivedObject(inputs, std::move(object), task_name,
                                                                replace_inputs, parameter_summary);
             if (!committed)
@@ -247,6 +284,7 @@ void SMainWindow::runMultiShapeTask(
             }
             QList<SSceneObject> results;
             int index = 2;
+            bool appearance_mapping_failed = false;
             const SSceneObject* source = m_document.findObject(input);
             if (copy_mode == SCopyMode::SharedPresentation &&
                 (!source || instance_transforms.size() != shapes->value().size()))
@@ -266,6 +304,32 @@ void SMainWindow::runMultiShapeTask(
                                    ? source->shape
                                    : shapes->value().at(result_index);
                 object.source = task_name;
+                if (source)
+                {
+                    object.display = source->display;
+                    object.imported_appearance = source->imported_appearance;
+                    object.use_imported_appearance = source->use_imported_appearance;
+                    if (copy_mode == SCopyMode::IndependentPresentation &&
+                        source->imported_appearance.valid)
+                    {
+                        const auto source_metrics = m_kernel->measure(source->shape);
+                        const auto result_metrics = m_kernel->measure(object.shape);
+                        if (!source_metrics || !result_metrics ||
+                            source_metrics.value().face_count != result_metrics.value().face_count)
+                        {
+                            object.imported_appearance = {};
+                            object.use_imported_appearance = false;
+                            if (source->use_imported_appearance)
+                            {
+                                object.display.color =
+                                    source->imported_appearance.fallback_style.color;
+                                object.display.transparency =
+                                    source->imported_appearance.fallback_style.transparency;
+                            }
+                            appearance_mapping_failed = true;
+                        }
+                    }
+                }
                 object.locked = false;
                 object.external_reference = false;
                 object.external_path.clear();
@@ -274,6 +338,11 @@ void SMainWindow::runMultiShapeTask(
                     object.transform = instance_transforms.at(result_index) * source->transform;
                 }
                 results.push_back(std::move(object));
+            }
+            if (appearance_mapping_failed)
+            {
+                appendLog(QStringLiteral("WARNING"),
+                          tr("%1 的部分结果未能安全映射面颜色，已退回主颜色").arg(task_name));
             }
             const auto committed = m_document.addDerivedObjects(
                 {input}, std::move(results), task_name, replace_inputs, parameter_summary);

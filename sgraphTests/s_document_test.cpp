@@ -279,6 +279,55 @@ class SDocumentTest final : public QObject
         QCOMPARE(result.errorCode(), SErrorCode::InvalidArgument);
     }
 
+    void overridesRestoresAndCopiesImportedAppearance()
+    {
+        const auto kernel = createKernelService();
+        const auto box = kernel->makeBox({2.0, 3.0, 4.0});
+        QVERIFY(box);
+        S3dDocument document;
+        SSceneObject object;
+        object.name = QStringLiteral("彩色对象");
+        object.shape = box.value();
+        object.imported_appearance.valid = true;
+        object.imported_appearance.base_style = {QColor(QStringLiteral("#3366cc")), 0.2};
+        object.imported_appearance.fallback_style = object.imported_appearance.base_style;
+        object.imported_appearance.face_overrides.push_back(
+            {1, {QColor(QStringLiteral("#cc3333")), 0.35}});
+        object.display.color = object.imported_appearance.fallback_style.color;
+        object.display.transparency = object.imported_appearance.fallback_style.transparency;
+        object.use_imported_appearance = true;
+        const auto id = document.addObject(object, QStringLiteral("导入"));
+        QVERIFY(id);
+
+        QVERIFY(document.setObjectColors({id.value()}, QColor(QStringLiteral("#00aa88"))));
+        const SSceneObject* overridden = document.findObject(id.value());
+        QVERIFY(overridden);
+        QVERIFY(!overridden->use_imported_appearance);
+        QCOMPARE(overridden->display.color, QColor(QStringLiteral("#00aa88")));
+        QCOMPARE(overridden->display.transparency, 0.2);
+
+        document.undo();
+        QVERIFY(document.findObject(id.value())->use_imported_appearance);
+        document.redo();
+        QVERIFY(!document.findObject(id.value())->use_imported_appearance);
+        QVERIFY(document.restoreImportedAppearances({id.value()}));
+        const SSceneObject* restored = document.findObject(id.value());
+        QVERIFY(restored->use_imported_appearance);
+        QCOMPARE(restored->display.color, QColor(QStringLiteral("#3366cc")));
+
+        const auto copies = document.copyObjects({id.value()}, SCopyMode::SharedPresentation,
+                                                 QStringLiteral("实例复制"));
+        QVERIFY(copies);
+        const SSceneObject* copy = document.findObject(copies.value().front());
+        QVERIFY(copy);
+        QVERIFY(copy->use_imported_appearance);
+        QCOMPARE(copy->imported_appearance.face_overrides.size(), 1);
+
+        const auto invalid = document.setObjectColors({id.value()}, QColor());
+        QVERIFY(!invalid);
+        QCOMPARE(invalid.errorCode(), SErrorCode::InvalidArgument);
+    }
+
     void publicTransactionRollsBackAndCannotCommitTwice()
     {
         S3dDocument document;

@@ -186,6 +186,17 @@ void SMainWindow::connectSignals()
                 QMenu menu(this);
                 menu.addAction(tr("普通复制"), this, &SMainWindow::duplicateSelection);
                 menu.addAction(tr("实例复制"), this, &SMainWindow::duplicateSelectionShared);
+                menu.addAction(tr("设置对象颜色…"), this, &SMainWindow::setSelectionColor);
+                QAction* restore_color = menu.addAction(
+                    tr("恢复导入颜色"), this, &SMainWindow::restoreSelectionImportedColors);
+                bool can_restore_color = false;
+                for (const SObjectId& id : selectedObjectIds())
+                {
+                    const SSceneObject* object = m_document.findObject(id);
+                    can_restore_color =
+                        can_restore_color || (object && object->imported_appearance.valid);
+                }
+                restore_color->setEnabled(can_restore_color);
                 menu.addAction(tr("删除"), this, &SMainWindow::deleteSelection);
                 menu.addAction(tr("新建组并归入"),
                                [this]()

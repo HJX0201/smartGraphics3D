@@ -1,5 +1,6 @@
 #include "s_main_window.h"
 
+#include <QColorDialog>
 #include <QMessageBox>
 
 namespace smartGraphics3D
@@ -61,6 +62,61 @@ void SMainWindow::duplicateSelection()
 void SMainWindow::duplicateSelectionShared()
 {
     duplicateSelectionWithMode(SCopyMode::SharedPresentation);
+}
+
+void SMainWindow::setSelectionColor()
+{
+    QList<SObjectId> ids;
+    QColor initial_color(205, 228, 238);
+    for (const SObjectId& id : selectedObjectIds())
+    {
+        const SSceneObject* object = m_document.findObject(id);
+        if (object && !object->shape.isNull())
+        {
+            if (ids.isEmpty())
+            {
+                initial_color = object->display.color;
+            }
+            ids.push_back(id);
+        }
+    }
+    if (ids.isEmpty())
+    {
+        return;
+    }
+
+    const QColor color = QColorDialog::getColor(initial_color, this, tr("设置对象颜色"));
+    if (!color.isValid())
+    {
+        return;
+    }
+    const auto result = m_document.setObjectColors(ids, color);
+    if (!result)
+    {
+        showFailure(tr("设置颜色失败"), result);
+    }
+}
+
+void SMainWindow::restoreSelectionImportedColors()
+{
+    QList<SObjectId> ids;
+    for (const SObjectId& id : selectedObjectIds())
+    {
+        const SSceneObject* object = m_document.findObject(id);
+        if (object && object->imported_appearance.valid)
+        {
+            ids.push_back(id);
+        }
+    }
+    if (ids.isEmpty())
+    {
+        return;
+    }
+    const auto result = m_document.restoreImportedAppearances(ids);
+    if (!result)
+    {
+        showFailure(tr("恢复导入颜色失败"), result);
+    }
 }
 
 void SMainWindow::deleteSelection()

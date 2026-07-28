@@ -33,6 +33,12 @@ class SProjectCodecTest final : public QObject
         object.name = QStringLiteral("测试球体");
         object.shape = sphere.value();
         object.display.color = QColor(QStringLiteral("#31a9e1"));
+        object.imported_appearance.valid = true;
+        object.imported_appearance.base_style = {QColor(QStringLiteral("#204080")), 0.15};
+        object.imported_appearance.fallback_style = {QColor(QStringLiteral("#204080")), 0.15};
+        object.imported_appearance.face_overrides.push_back(
+            {1, {QColor(QStringLiteral("#e04030")), 0.4}});
+        object.use_imported_appearance = true;
         QVERIFY(source.addObject(object, QStringLiteral("创建球体")));
 
         SProjectCodec codec;
@@ -45,6 +51,11 @@ class SProjectCodecTest final : public QObject
         QCOMPARE(loaded.objects().size(), std::size_t(1));
         QCOMPARE(loaded.objects().front().name, QStringLiteral("测试球体"));
         QVERIFY(loaded.objects().front().shape.isValid());
+        QVERIFY(loaded.objects().front().use_imported_appearance);
+        QCOMPARE(loaded.objects().front().imported_appearance.face_overrides.size(), 1);
+        QCOMPARE(loaded.objects().front().imported_appearance.face_overrides.front().face_index, 1);
+        QCOMPARE(loaded.objects().front().imported_appearance.face_overrides.front().style.color,
+                 QColor(QStringLiteral("#e04030")));
     }
 
     void rejectsTruncatedProject()
@@ -61,6 +72,67 @@ class SProjectCodecTest final : public QObject
         SProjectCodec codec;
         const auto result = codec.load(document, path);
         QVERIFY(!result);
+    }
+
+    void rejectsOutOfRangeImportedFaceAppearance()
+    {
+        QTemporaryDir directory;
+        QVERIFY(directory.isValid());
+        const QString path = directory.filePath(QStringLiteral("invalid-color-face.sg3d"));
+        const auto kernel = createKernelService();
+        const auto box = kernel->makeBox({2.0, 3.0, 4.0});
+        QVERIFY(box);
+
+        S3dDocument source;
+        SSceneObject object;
+        object.name = QStringLiteral("彩色对象");
+        object.shape = box.value();
+        object.imported_appearance.valid = true;
+        object.imported_appearance.base_style = {QColor(QStringLiteral("#336699")), 0.0};
+        object.imported_appearance.fallback_style = object.imported_appearance.base_style;
+        object.imported_appearance.face_overrides.push_back(
+            {1, {QColor(QStringLiteral("#cc3300")), 0.0}});
+        object.use_imported_appearance = true;
+        QVERIFY(source.addObject(object, QStringLiteral("导入")));
+
+        SProjectCodec codec;
+        QVERIFY(codec.save(source, path));
+        QFile input(path);
+        QVERIFY(input.open(QIODevice::ReadOnly));
+        QDataStream input_stream(&input);
+        input_stream.setByteOrder(QDataStream::LittleEndian);
+        QByteArray magic;
+        QByteArray metadata;
+        quint32 version = 0;
+        input_stream >> magic >> version >> metadata;
+        const QByteArray shape_tail = input.readAll();
+        input.close();
+
+        QJsonObject root = QJsonDocument::fromJson(metadata).object();
+        QJsonArray objects = root.value(QStringLiteral("objects")).toArray();
+        QJsonObject object_json = objects.at(0).toObject();
+        QJsonObject appearance = object_json.value(QStringLiteral("importedAppearance")).toObject();
+        QJsonArray faces = appearance.value(QStringLiteral("faces")).toArray();
+        QJsonObject face = faces.at(0).toObject();
+        face.insert(QStringLiteral("faceIndex"), 999);
+        faces.replace(0, face);
+        appearance.insert(QStringLiteral("faces"), faces);
+        object_json.insert(QStringLiteral("importedAppearance"), appearance);
+        objects.replace(0, object_json);
+        root.insert(QStringLiteral("objects"), objects);
+
+        QSaveFile output(path);
+        QVERIFY(output.open(QIODevice::WriteOnly));
+        QDataStream output_stream(&output);
+        output_stream.setByteOrder(QDataStream::LittleEndian);
+        output_stream << magic << version << QJsonDocument(root).toJson(QJsonDocument::Compact);
+        QCOMPARE(output.write(shape_tail), static_cast<qint64>(shape_tail.size()));
+        QVERIFY(output.commit());
+
+        S3dDocument loaded;
+        const auto result = codec.load(loaded, path);
+        QVERIFY(!result);
+        QCOMPARE(result.errorCode(), SErrorCode::CorruptData);
     }
 
     void persistsUnitsMeasurementsTransformsAndSnapshots()

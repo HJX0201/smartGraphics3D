@@ -278,8 +278,21 @@ void SMainWindow::refreshProperties()
     QTreeWidgetItem* display = addCategory(m_property_tree, tr("显示"));
     addProperty(display, tr("可见"), object->visible ? tr("是") : tr("否"));
     addProperty(display, tr("显示模式"), displayModeName(object->display.mode));
-    addProperty(display, tr("颜色"), object->display.color.name());
-    addProperty(display, tr("透明度"), QString::number(object->display.transparency, 'f', 2));
+    addProperty(display, tr("颜色"),
+                object->use_imported_appearance ? tr("导入多色") : object->display.color.name());
+    addProperty(display, tr("透明度"),
+                object->use_imported_appearance
+                    ? tr("按导入面设置")
+                    : QString::number(object->display.transparency, 'f', 2));
+    addProperty(display, tr("颜色来源"),
+                object->use_imported_appearance
+                    ? tr("导入模型")
+                    : (object->imported_appearance.valid ? tr("整体覆盖") : tr("默认/对象颜色")));
+    if (object->imported_appearance.valid)
+    {
+        addProperty(display, tr("面颜色覆盖"),
+                    QString::number(object->imported_appearance.face_overrides.size()));
+    }
     const int presentation_members =
         m_document.presentationGroupMemberCount(object->presentation_group_id);
     addProperty(display, tr("显示资源"),

@@ -101,6 +101,8 @@ class SMainWindow final : public QMainWindow
     void duplicateSelection();
     void duplicateSelectionShared();
     void duplicateSelectionWithMode(SCopyMode mode);
+    void setSelectionColor();
+    void restoreSelectionImportedColors();
     void deleteSelection();
     void measureSelection();
     void measureSubSelection();
@@ -131,7 +133,8 @@ class SMainWindow final : public QMainWindow
                              const QList<SObjectId>& inputs, bool& replace_inputs);
     void runShapeTask(QString task_name, QList<SObjectId> inputs, QString result_name,
                       QString parameter_summary,
-                      std::function<SResult<SKernelShape>(const STaskContext&)> work);
+                      std::function<SResult<SKernelShape>(const STaskContext&)> work,
+                      bool preserve_appearance = false);
     void runMultiShapeTask(QString task_name, SObjectId input, QString result_prefix,
                            QString parameter_summary,
                            std::function<SResult<QList<SKernelShape>>(const STaskContext&)> work,

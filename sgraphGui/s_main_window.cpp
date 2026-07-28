@@ -140,6 +140,8 @@ void SMainWindow::createActions()
         makeAction(tr("实例复制"), SIconId::Copy, QStringLiteral("Ctrl+Shift+D"));
     auto* linear_array_action = makeAction(tr("线性阵列"), SIconId::LinearArray);
     auto* polar_array_action = makeAction(tr("圆周阵列"), SIconId::PolarArray);
+    auto* set_color_action = makeAction(tr("设置对象颜色"), SIconId::DisplayShaded);
+    auto* restore_color_action = makeAction(tr("恢复导入颜色"), SIconId::SnapshotRestore);
     auto* delete_action = makeAction(tr("删除"), SIconId::Delete, QStringLiteral("Delete"));
     connect(union_action, &QAction::triggered, this,
             [this]()
@@ -166,6 +168,9 @@ void SMainWindow::createActions()
             &SMainWindow::duplicateSelectionShared);
     connect(linear_array_action, &QAction::triggered, this, &SMainWindow::runLinearArray);
     connect(polar_array_action, &QAction::triggered, this, &SMainWindow::runPolarArray);
+    connect(set_color_action, &QAction::triggered, this, &SMainWindow::setSelectionColor);
+    connect(restore_color_action, &QAction::triggered, this,
+            &SMainWindow::restoreSelectionImportedColors);
     connect(delete_action, &QAction::triggered, this, &SMainWindow::deleteSelection);
 
     m_undo_action = makeAction(tr("撤销"), SIconId::Undo, QStringLiteral("Ctrl+Z"));
@@ -218,10 +223,11 @@ void SMainWindow::createActions()
         action->setProperty("ribbonPage", tr("建模"));
     }
     const QList<QAction*> modify_actions = {
-        union_action,   difference_action,    intersection_action, fillet_action,
-        chamfer_action, hole_action,          transform_action,    mirror_action,
-        copy_action,    instance_copy_action, linear_array_action, polar_array_action,
-        delete_action,  m_undo_action,        m_redo_action};
+        union_action,     difference_action,    intersection_action, fillet_action,
+        chamfer_action,   hole_action,          transform_action,    mirror_action,
+        copy_action,      instance_copy_action, linear_array_action, polar_array_action,
+        set_color_action, restore_color_action, delete_action,       m_undo_action,
+        m_redo_action};
     for (QAction* action : modify_actions)
     {
         action->setProperty("ribbonPage", tr("修改"));

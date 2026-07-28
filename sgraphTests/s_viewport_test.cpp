@@ -158,6 +158,43 @@ class SViewportTest final : public QObject
         QCOMPARE(independent.rendered_triangles, shared.rendered_triangles);
         QCOMPARE(independent.estimated_gpu_geometry_bytes, shared.estimated_gpu_geometry_bytes * 2);
     }
+
+    void usesColoredPrototypeForImportedAppearance()
+    {
+        const auto kernel = createKernelService();
+        const auto box = kernel->makeBox({10.0, 12.0, 14.0});
+        QVERIFY(box);
+
+        S3dDocument document;
+        SSceneObject source;
+        source.name = QStringLiteral("彩色共享原型");
+        source.shape = box.value();
+        source.imported_appearance.valid = true;
+        source.imported_appearance.base_style = {QColor(QStringLiteral("#3366cc")), 0.1};
+        source.imported_appearance.fallback_style = source.imported_appearance.base_style;
+        source.imported_appearance.face_overrides.push_back(
+            {1, {QColor(QStringLiteral("#cc3333")), 0.3}});
+        source.use_imported_appearance = true;
+        const auto source_id = document.addObject(source, QStringLiteral("导入"));
+        QVERIFY(source_id);
+        const auto copies = document.copyObjects({source_id.value()}, SCopyMode::SharedPresentation,
+                                                 QStringLiteral("实例复制"));
+        QVERIFY(copies);
+
+        SOccViewport viewport;
+        viewport.resize(640, 480);
+        viewport.setDocument(&document);
+        viewport.show();
+        QTRY_VERIFY_WITH_TIMEOUT(viewport.isInitialized(), 3000);
+        QTRY_COMPARE_WITH_TIMEOUT(viewport.renderResourceStatistics().connected_instances, 2, 3000);
+        const SRenderResourceStatistics statistics = viewport.renderResourceStatistics();
+        QCOMPARE(statistics.shared_prototypes, 1);
+        QCOMPARE(statistics.colored_prototypes, 1);
+
+        viewport.setSelectionMode(SSelectionMode::Object);
+        viewport.selectObject(copies.value().front());
+        QCOMPARE(viewport.selectedObjectIds(), QList<SObjectId>{copies.value().front()});
+    }
 };
 } // namespace smartGraphics3D
 
