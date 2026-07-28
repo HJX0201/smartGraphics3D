@@ -3,11 +3,18 @@
 本目录保存 smartGraphics3D 普通复制与共享显示实例的完整、可复现性能资料。正式压力
 口径是“单份模型本身非常大，复制次数不超过 10”，而不是用大量小对象堆高实例数量。
 
-## 正式测试集
+## 结果目录
 
-`data/heavy_5000_entities.brep` 由程序确定性生成，包含 5000 个实体和约 234.24 万个
-显示三角形。它由长方体、圆柱、球体、圆环体按固定网格与旋转组成，不下载模型，也不
-包含客户数据。
+每次运行固定在 `results/` 下创建 `yyyyMMdd-N` 目录，例如当天第一次测试为
+`results/20260728-1/`，第二次为 `results/20260728-2/`。每个目录最终只包含：
+
+- `dataset.brep`：本次确定性生成的测试集；
+- `report.html`：包含环境、全部原始运行和中位数汇总的测试报告。
+
+JSON 是生成报告时的中间数据，成功后自动删除。正式结果位于 `results/20260727-2/`。
+测试集包含 5000 个实体和约 234.24 万个
+显示三角形，由长方体、圆柱、球体、圆环体按固定网格与旋转组成，不下载模型或使用
+客户数据。
 
 | 属性 | 值 |
 | --- | ---: |
@@ -16,8 +23,8 @@
 | 每份显示三角形 | 2,342,442 |
 | SHA-256 | `c15e8cfa063a681bd2c76c62485d64018d4de78ab833e4d394353e8e0e8160d7` |
 
-`data/standard_set.brep` 和 `results/standard/` 保留 4 实体的小模型回归数据，用于检查
-1/10/50/100 数量趋势，不作为当前主结论。
+`results/20260727-1/` 保留 4 实体的小模型回归结果，用于检查 1/10/50/100 数量趋势，
+不作为当前主结论。
 
 ## x64 Release 正式结果
 
@@ -44,9 +51,7 @@
 - 首次显示减少 52.69%；
 - 30 帧重绘相差 0.03%，可视为不变。
 
-正式 HTML 报告为
-`results/heavy-5000-entities/report.html`；汇总与 24 次原始数据分别在
-`benchmark.json` 和 `raw/*.json`。
+正式模型和包含 24 次原始数据的 HTML 报告位于 `results/20260727-2/`。
 
 ## 为什么不是固定减半
 
@@ -69,12 +74,14 @@
 ```powershell
 python scripts/build/build_64_release.py --occt-root C:\SDK\occt-7.7.0
 
-build/64/release/benchmarks/sgraphInstanceCopyBenchmark.exe --suite-heavy `
-  build/64/release/heavy-5000-entities
+powershell -ExecutionPolicy Bypass -File `
+  sgraphBenchmarks/instanceCopy/scripts/s_run_instance_copy_benchmark.ps1 `
+  -Suite Heavy
 ```
 
-正式重载档位固定为 1/2/5/10；`--suite-count OUTPUT N` 允许单独复测一个档位，但
-`N` 必须在 1 到 10 之间。每次输出都包含 BREP、SHA-256、环境、汇总 JSON 和原始 JSON。
+运行脚本固定输出到本目录的 `results/`，按日期和当日序号创建新目录，不覆盖历史结果。
+`-Suite Standard` 运行小模型趋势套件；`-Suite Count -Count N` 单独复测一个重载档位，
+`N` 必须为 1 到 10。
 
 性能数值不是跨机器硬门槛。自动测试的硬门槛是两种模式的展开三角形相同、普通模式产生
 N 个独立 Presentation、共享模式产生 1 个原型和 N 个 Connected 实例。

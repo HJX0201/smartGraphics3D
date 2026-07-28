@@ -36,8 +36,8 @@ clang-tidy 退出码 0；87 个自研 C++ 文件均不超过 800 行，最大文
 - 展开三角形完全相同；
 - 30 帧重绘相差 0.03%。
 
-完整 HTML、汇总 JSON、24 次原始 JSON 和 BREP 哈希位于
-`sgraphBenchmarks/instanceCopy/`。
+完整 BREP 和包含 24 次原始数据的 HTML 报告位于
+`sgraphBenchmarks/instanceCopy/results/20260727-2/`。
 
 ## 工具链附件
 

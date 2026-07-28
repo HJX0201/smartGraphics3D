@@ -105,30 +105,26 @@ SResult<SKernelShape> makeComplexSet(bool heavy)
     return kernel->makeCompound(shapes);
 }
 
-SResult<SKernelShape> loadOrCreateDataset(const QString& dataset_path, bool heavy)
+SResult<SKernelShape> loadDataset(const QString& dataset_path)
 {
     SStandardCadCodec codec;
-    if (QFileInfo::exists(dataset_path))
+    const auto imported = codec.read(dataset_path);
+    if (!imported)
     {
-        const auto imported = codec.read(dataset_path);
-        if (!imported)
-        {
-            return SResult<SKernelShape>::failure(imported.errorCode(), imported.message());
-        }
-        return SResult<SKernelShape>::success(imported.value().shape);
+        return SResult<SKernelShape>::failure(imported.errorCode(), imported.message());
     }
+    return SResult<SKernelShape>::success(imported.value().shape);
+}
 
+bool generateDataset(const QString& dataset_path, bool heavy)
+{
     const auto generated = makeComplexSet(heavy);
     if (!generated)
     {
-        return generated;
+        return false;
     }
-    if (!codec.write(generated.value(), dataset_path))
-    {
-        return SResult<SKernelShape>::failure(SErrorCode::FileFailure,
-                                              QObject::tr("无法写入基准测试集"));
-    }
-    return generated;
+    SStandardCadCodec codec;
+    return static_cast<bool>(codec.write(generated.value(), dataset_path));
 }
 
 bool writeJson(const QString& path, const QJsonObject& json)
@@ -194,7 +190,7 @@ qint64 medianInteger(QList<qint64> values)
 int runCase(const QString& mode_name, int count, const QString& output_path,
             const QString& dataset_path, bool heavy)
 {
-    const auto complex_set = loadOrCreateDataset(dataset_path, heavy);
+    const auto complex_set = loadDataset(dataset_path);
     if (!complex_set)
     {
         return 2;
@@ -257,7 +253,7 @@ int runCase(const QString& mode_name, int count, const QString& output_path,
 
     QFileInfo dataset_info(dataset_path);
     QJsonObject dataset;
-    dataset.insert(QStringLiteral("path"), dataset_info.absoluteFilePath());
+    dataset.insert(QStringLiteral("path"), dataset_info.fileName());
     dataset.insert(QStringLiteral("sizeBytes"), static_cast<double>(dataset_info.size()));
     dataset.insert(QStringLiteral("sha256"), QString::fromLatin1(fileHash(dataset_path)));
     dataset.insert(QStringLiteral("entityCount"), heavy ? kHeavyEntityCount : 4);
@@ -341,7 +337,11 @@ int runSuite(const QString& output_directory, const QList<int>& counts, bool hea
     {
         return 10;
     }
-    const QString dataset_path = directory.filePath(QStringLiteral("generated_complex_set.brep"));
+    const QString dataset_path = directory.filePath(QStringLiteral("dataset.brep"));
+    if (!generateDataset(dataset_path, heavy))
+    {
+        return 14;
+    }
     QJsonArray all_runs;
     QJsonArray summaries;
     QJsonObject dataset;
@@ -396,9 +396,7 @@ int runSuite(const QString& output_directory, const QList<int>& counts, bool hea
     report.insert(QStringLiteral("dataset"), dataset);
     report.insert(QStringLiteral("runs"), all_runs);
     report.insert(QStringLiteral("summary"), summaries);
-    return writeJson(directory.filePath(QStringLiteral("instance_copy_benchmark.json")), report)
-               ? 0
-               : 13;
+    return writeJson(directory.filePath(QStringLiteral("benchmark.json")), report) ? 0 : 13;
 }
 } // namespace
 } // namespace smartGraphics3D

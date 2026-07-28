@@ -39,9 +39,9 @@ Release 会生成 `build/64/release/benchmarks/sgraphInstanceCopyBenchmark.exe`�
 OCCT 原始统计、Graphic3d 结构和场景三角形数。性能数字不作为易波动的 CTest 门槛；
 结构测试必须证明共享模式真实产生一个原型和 N 个 Connected 实例。
 
-正式数据、模型哈希、HTML 报告和复现说明位于
-`sgraphBenchmarks/instanceCopy/`。模型由基准程序确定性生成，不包含客户数据或第三方
-下载模型。
+每次运行都在 `sgraphBenchmarks/instanceCopy/results/` 下创建 `yyyyMMdd-N` 目录，最终
+只保存本次生成的 `dataset.brep` 和包含完整测试数据的 `report.html`。模型由基准程序
+确定性生成，不包含客户数据或第三方下载模型；复现方法见该基准的 `README.md`。
 
 ## 发布前检查
 

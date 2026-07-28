@@ -28,6 +28,8 @@ function Format-Percent([double]$before, [double]$after)
 
 $summaryRows = @()
 $counts = @($report.summary | Select-Object -ExpandProperty count -Unique | Sort-Object)
+$countLabel = $counts -join '、'
+$runCount = @($report.runs).Count
 foreach ($count in $counts)
 {
     $independent = $report.summary |
@@ -133,8 +135,8 @@ code { color:#bedfff; word-break:break-all; }
 
 <h2>结论</h2>
 <div class="panel">
-  <p class="result">一个包含 $($dataset.entityCount) 个实体、每份
-  $('{0:N0}' -f $dataset.trianglesPerSet) 个三角形的大模型，仅复制 1、2、5、10 次。</p>
+  <p class="result">测试集包含 $($dataset.entityCount) 个实体、每份
+  $('{0:N0}' -f $dataset.trianglesPerSet) 个三角形；测试份数为 $countLabel。</p>
   <p>普通复制为每个对象建立独立 AIS_Shape Presentation；共享模式保留一个原型并用
   Connected 实例复用显示几何。两种模式在每个数量档位的展开三角形完全相同。</p>
 </div>
@@ -154,7 +156,7 @@ code { color:#bedfff; word-break:break-all; }
 <tbody>$($reductionRows -join "`n")</tbody>
 </table></div>
 
-<h2>24 次原始运行</h2>
+<h2>$runCount 次原始运行</h2>
 <div class="panel"><table>
 <thead><tr><th>份数</th><th>模式</th><th>首显 ms</th><th>30 帧 ms</th>
 <th>Private MiB</th><th>Working MiB</th><th>GPU 估算 MiB</th></tr></thead>
