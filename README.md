@@ -9,7 +9,7 @@ smartGraphics3D 是一个基于 C++17、Qt 5.12.10 和 OpenCascade 7.7.0 的 Win
 ![smartGraphics3D 主界面](sgraphDocs/images/smartgraphics3d-main-window.png)
 
 上图为实际软件界面，展示了 Ribbon 工具栏、三维视口、项目与场景树、属性面板以及后台
-任务列表。
+任务列表。视口中的管线示例模型来源于网络，仅用于界面展示，模型文件不随仓库分发。
 
 ## 核心亮点：AIS 共享显示实例
 
