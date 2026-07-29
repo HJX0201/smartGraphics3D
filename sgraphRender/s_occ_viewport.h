@@ -56,6 +56,7 @@ class SOccViewport final : public QWidget
     void setStandardView(SStandardView view);
     void setPerspective(bool enabled);
     void setFreeRotation(bool enabled);
+    void setGridVisible(bool visible);
     void setDisplayMode(SDisplayMode mode);
     void setSelectionMode(SSelectionMode mode);
     void setProgressiveRenderingEnabled(bool enabled);

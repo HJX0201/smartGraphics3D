@@ -61,6 +61,7 @@ enum class SIconId
     ViewRestore,
     RotationCenter,
     FreeRotation,
+    Grid,
     ClipPlanes,
     ViewportSingle,
     ViewportHorizontal,

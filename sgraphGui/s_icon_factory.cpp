@@ -137,6 +137,8 @@ QString iconName(SIconId icon_id)
         return QStringLiteral("crosshair");
     case SIconId::FreeRotation:
         return QStringLiteral("refresh-cw");
+    case SIconId::Grid:
+        return QStringLiteral("grid-2x2");
     case SIconId::ClipPlanes:
         return QStringLiteral("slice");
     case SIconId::ViewportSingle:

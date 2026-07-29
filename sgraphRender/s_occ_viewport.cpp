@@ -218,6 +218,27 @@ void SOccViewport::setFreeRotation(bool enabled)
     m_impl->free_rotation = enabled;
 }
 
+void SOccViewport::setGridVisible(bool visible)
+{
+    m_impl->grid_visible = visible;
+    if (m_impl->viewer.IsNull())
+    {
+        return;
+    }
+    if (visible)
+    {
+        m_impl->viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
+    }
+    else
+    {
+        m_impl->viewer->DeactivateGrid();
+    }
+    if (!m_impl->view.IsNull())
+    {
+        m_impl->view->Redraw();
+    }
+}
+
 void SOccViewport::setDisplayMode(SDisplayMode mode)
 {
     m_impl->display_mode = mode;

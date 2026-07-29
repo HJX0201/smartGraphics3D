@@ -65,6 +65,7 @@ struct SOccViewport::SImpl
     bool initialized = false;
     bool perspective = false;
     bool free_rotation = false;
+    bool grid_visible = true;
     bool progressive_rendering_enabled = true;
     SStandardView standard_view = SStandardView::Isometric;
     SDisplayMode display_mode = SDisplayMode::ShadedWithEdges;

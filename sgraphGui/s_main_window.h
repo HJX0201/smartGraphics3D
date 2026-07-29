@@ -182,6 +182,7 @@ class SMainWindow final : public QMainWindow
     bool m_synchronizing_camera = false;
     bool m_sync_selections = true;
     bool m_sync_cameras = true;
+    bool m_grid_visible = true;
     QList<SClipPlane> m_clip_planes;
     QStringList m_structured_logs;
 };

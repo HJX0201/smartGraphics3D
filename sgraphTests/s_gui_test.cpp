@@ -339,12 +339,40 @@ class SGuiTest final : public QObject
         QAction* four_views = actionByText(window, QStringLiteral("四视图"));
         QAction* single_view = actionByText(window, QStringLiteral("单视口"));
         QAction* sync_selection = actionByText(window, QStringLiteral("同步选择"));
+        QAction* grid_visibility = actionByText(window, QStringLiteral("显示网格"));
         QVERIFY(four_views);
         QVERIFY(single_view);
         QVERIFY(sync_selection);
+        QVERIFY(grid_visibility);
         QVERIFY(sync_selection->isChecked());
+        QVERIFY(grid_visibility->isCheckable());
+        QVERIFY(grid_visibility->isChecked());
+
+        const auto all_viewports_have_grid_state = [&window](bool active)
+        {
+            const QList<SOccViewport*> viewports = window.findChildren<SOccViewport*>();
+            return !viewports.isEmpty() &&
+                   std::all_of(viewports.cbegin(), viewports.cend(),
+                               [active](SOccViewport* viewport)
+                               {
+                                   return viewport->isInitialized() &&
+                                          viewport->isGridActive() == active;
+                               });
+        };
+
+        window.resize(1280, 720);
+        window.show();
+        QTRY_VERIFY_WITH_TIMEOUT(all_viewports_have_grid_state(true), 3000);
+        grid_visibility->trigger();
+        QVERIFY(!grid_visibility->isChecked());
+        QVERIFY(all_viewports_have_grid_state(false));
+
         four_views->trigger();
         QCOMPARE(window.findChildren<SOccViewport*>().size(), 4);
+        QTRY_VERIFY_WITH_TIMEOUT(all_viewports_have_grid_state(false), 3000);
+        grid_visibility->trigger();
+        QVERIFY(grid_visibility->isChecked());
+        QVERIFY(all_viewports_have_grid_state(true));
         window.resize(1920, 1080);
         QVERIFY(window.centralWidget()->minimumSize().width() <=
                 window.centralWidget()->size().width());

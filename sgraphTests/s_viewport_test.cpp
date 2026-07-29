@@ -19,6 +19,10 @@ class SViewportTest final : public QObject
         viewport.show();
         QTRY_VERIFY_WITH_TIMEOUT(viewport.isInitialized(), 3000);
         QVERIFY(viewport.isGridActive());
+        viewport.setGridVisible(false);
+        QVERIFY(!viewport.isGridActive());
+        viewport.setGridVisible(true);
+        QVERIFY(viewport.isGridActive());
 
         viewport.setStandardView(SStandardView::Front);
         QCOMPARE(viewport.standardView(), SStandardView::Front);
@@ -44,6 +48,7 @@ class SViewportTest final : public QObject
         viewport.setStandardView(SStandardView::Right);
         viewport.setPerspective(true);
         viewport.setFreeRotation(true);
+        viewport.setGridVisible(false);
         viewport.setDisplayMode(SDisplayMode::Wireframe);
         viewport.setSelectionMode(SSelectionMode::Edge);
         viewport.setClipPlanes({{QVector3D(0.0F, 1.0F, 0.0F), 12.0, false}});
@@ -54,6 +59,9 @@ class SViewportTest final : public QObject
         QCOMPARE(viewport.standardView(), SStandardView::Right);
         QVERIFY(viewport.isPerspective());
         QVERIFY(viewport.isFreeRotation());
+        QVERIFY(!viewport.isGridActive());
+        viewport.setGridVisible(true);
+        QVERIFY(viewport.isGridActive());
         QCOMPARE(viewport.displayMode(), SDisplayMode::Wireframe);
         QCOMPARE(viewport.selectionMode(), SSelectionMode::Edge);
         QCOMPARE(viewport.clipPlaneCount(), 1);

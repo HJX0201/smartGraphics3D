@@ -99,6 +99,7 @@ void SMainWindow::setViewportLayout(int layout_mode)
         viewport->setDocument(&m_document);
         viewport->setPerspective(m_viewport->isPerspective());
         viewport->setFreeRotation(m_viewport->isFreeRotation());
+        viewport->setGridVisible(m_grid_visible);
         viewport->setDisplayMode(m_viewport->displayMode());
         viewport->setSelectionMode(m_viewport->selectionMode());
         viewport->setClipPlanes(m_clip_planes);

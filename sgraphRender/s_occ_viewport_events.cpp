@@ -189,7 +189,10 @@ void SOccViewport::initializeViewer()
     m_impl->viewer->Grid(Aspect_GT_Rectangular)
         ->SetColors(Quantity_Color(0.035, 0.055, 0.070, Quantity_TOC_RGB),
                     Quantity_Color(0.075, 0.115, 0.145, Quantity_TOC_RGB));
-    m_impl->viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
+    if (m_impl->grid_visible)
+    {
+        m_impl->viewer->ActivateGrid(Aspect_GT_Rectangular, Aspect_GDM_Lines);
+    }
     m_impl->context = new AIS_InteractiveContext(m_impl->viewer);
     m_impl->view = m_impl->viewer->CreateView();
     m_impl->view->ChangeRenderingParams().CollectedStats =

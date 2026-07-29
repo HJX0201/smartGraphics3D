@@ -255,6 +255,23 @@ void SMainWindow::createViewRibbon()
                      configureClipPlanes();
                  });
 
+    QAction* grid_action = makeAction(tr("显示网格"), SIconId::Grid);
+    grid_action->setObjectName(QStringLiteral("gridVisibilityAction"));
+    grid_action->setCheckable(true);
+    grid_action->setChecked(true);
+    grid_action->setToolTip(tr("显示或隐藏世界 XY 平面的矩形网格"));
+    connect(grid_action, &QAction::toggled, this,
+            [this](bool visible)
+            {
+                m_grid_visible = visible;
+                for (SOccViewport* viewport : m_viewports)
+                {
+                    viewport->setGridVisible(visible);
+                }
+            });
+    m_ribbon->addAction(page, tr("辅助显示"), grid_action, kStandardRow,
+                        SRibbonButtonSize::Standard, true);
+
     auto* viewport_layout_group = new QActionGroup(this);
     viewport_layout_group->setExclusive(true);
     const struct
