@@ -14,3 +14,22 @@
 
 本项目只处理本地 CAD 数据，不应以管理员身份运行。仅从项目 Releases 或自行验证的
 源码构建获取可执行文件。
+
+## Repository and release checks
+
+仓库不得跟踪 SDK、工具链压缩包、构建产物、客户模型、诊断包或项目文件。提交前运行：
+
+```powershell
+python scripts/security/test_audit_sensitive_data.py
+python scripts/security/audit_sensitive_data.py --require-noreply
+```
+
+发布前还必须扫描实际目录或 ZIP；扫描器只报告类别与文件位置，不打印疑似凭据内容：
+
+```powershell
+python scripts/security/audit_sensitive_data.py --release dist\smartGraphics3D-windows-x64
+python scripts/security/audit_sensitive_data.py --release dist\smartGraphics3D-windows-x64.zip
+```
+
+如果历史中出现敏感信息，应先撤销或轮换凭据，再使用独立镜像清理历史；不要仅删除当前
+分支中的文件。所有本地提交使用 GitHub `noreply` 邮箱。

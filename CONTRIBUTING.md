@@ -12,6 +12,9 @@
 - 新功能包含核心、边界和错误路径测试；
 - 不提交 SDK、构建产物、客户模型、密钥或本机绝对路径。
 
+提交前还需执行 `python scripts/security/audit_sensitive_data.py --require-noreply`；发布包需用
+同一脚本的 `--release` 参数检查目录或 ZIP。
+
 性能修改必须保留原始 JSON、测试集 SHA-256、运行环境和复现命令。界面修改的视觉验收
 使用人工脱敏截图，不提交包含客户数据的图片。
 

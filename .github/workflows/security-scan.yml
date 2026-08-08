@@ -1,0 +1,24 @@
+name: Security Scan
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  sensitive-data:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Test security scanner
+        run: python scripts/security/test_audit_sensitive_data.py
+      - name: Audit repository and history
+        run: python scripts/security/audit_sensitive_data.py --require-noreply
